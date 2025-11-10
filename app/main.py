@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database import engine, SessionLocal
-from app.models import Base, AuthorCreate, AuthorRead, AuthorPut, AuthorPartialUpdate, BookCreate, BookRead
+from app.models import Base
+from app.schemas import AuthorCreate, AuthorRead, AuthorPut, AuthorPartialUpdate, BookCreate, BookRead
 #from app.schemas import 
 
 @asynccontextmanager
