@@ -1,5 +1,6 @@
 from typing import Annotated, Optional
 from pydantic import BaseModel, EmailStr, Field, StringConstraints, ConfigDict
+from annotated_types import Ge, Le
 
 NameStr = Annotated[str, StringConstraints(min_length=1, max_length=100)]
 YearInt = Annotated[int, Ge(1900), Le(2100)]
