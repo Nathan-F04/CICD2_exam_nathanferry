@@ -54,15 +54,38 @@ def post_author(payload: AuthorCreate, db: Session = Depends(get_db)):
     db.refresh(db_author)
     return db_author
 
-@app.get("/api/authors", response_model=list[AuthorRead])
+@app.get("/api/authors", response_model=list[AuthorRead], status_code=200)
 def list_authors(limit: int=10, offset:int=0, db: Session = Depends(get_db))
     stmt = select(AuthorDB).orderby(AuthorDB.id).limit(limit).offset(offset)
     return db.execute(stmt).scalars().all()
 
-@app.get("/api/authors/{id}", response_model=AuthorRead, status_code=201)
+@app.get("/api/authors/{id}", response_model=AuthorRead, status_code=200)
 def get_author(author_id: int, db: Session = Depends(get_db))
     author = db,get(AuthorDB, author_id)
     if not author:
         raise HTTPException(status_code=404, detail="Author not found")
     return author
 
+@app.put("/api/authors/{id}", response_model=AuthorRead, status_code=200)
+def put_author(author_id: int, payload: AuthorPut, db: Session = Depends(get_db))
+    author = db.get(AuthorDB, author_id)
+    if not author:
+        raise HTTPException(status_code=404, "Author not found")
+    edit = AuthorDB(**payload.model_dump())
+    stmt = update(AuthorDB).where(AuthorDB.id == author_id).values(id = edit.id, name = edit.name, email = edit.email, year_started = edit.year_started)
+    db.execute(stmt)
+    commit_or_rollback(status_code=409, "Already exists")
+    return edit
+
+@app.patch("/api/authors/{id}", response_model=AuthorRead, status_code=200)
+def patch_author(author_id: int, payload: AuthorPartialUpdate, db: Session = Depends(get_db))
+    author = db.query(AuthorDB).filter(AuthorDB.id == author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, "Author not found")
+    edit = payload.model_dump(exclude_unset = True)
+    for key, value in edit.items():
+        setattr(new_details, key, value)
+    db.add(new_details)
+    commit_or_rollback(status_code=409, "Already exists")
+    db.refresh(new_details)
+    return new_details
