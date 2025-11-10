@@ -38,3 +38,7 @@ def get_db():
 def health():
     return {"status": "ok"}
 
+
+@app.post("/api/authors", response_model = AuthorRead, status_code = 201)
+def post_author(payload: AuthorCreate, db: Session = Depends(get_db))
+
