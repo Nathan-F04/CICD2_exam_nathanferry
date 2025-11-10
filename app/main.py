@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database import engine, SessionLocal
-from app.models import Base
+from app.models import Base, AuthorCreate, AuthorRead, AuthorPut, AuthorPartialUpdate, BookCreate, BookRead
 #from app.schemas import 
 
 @asynccontextmanager
@@ -38,7 +38,31 @@ def get_db():
 def health():
     return {"status": "ok"}
 
+def commit_or_rollback(db: Session, error_msg: str):
+    try:
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=error_msg)
+
 
 @app.post("/api/authors", response_model = AuthorRead, status_code = 201)
-def post_author(payload: AuthorCreate, db: Session = Depends(get_db))
+def post_author(payload: AuthorCreate, db: Session = Depends(get_db)):
+    db_author = AuthorDB(**payload.model_dump())
+    db.add(db_author)
+    commit_or_rollback(db, "Author already exists")
+    db.refresh(db_author)
+    return db_author
+
+@app.get("/api/authors", response_model=list[AuthorRead])
+def list_authors(limit: int=10, offset:int=0, db: Session = Depends(get_db))
+    stmt = select(AuthorDB).orderby(AuthorDB.id).limit(limit).offset(offset)
+    return db.execute(stmt).scalars().all()
+
+@app.get("/api/authors/{id}", response_model=AuthorRead, status_code=201)
+def get_author(author_id: int, db: Session = Depends(get_db))
+    author = db,get(AuthorDB, author_id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+    return author
 
