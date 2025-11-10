@@ -10,4 +10,8 @@ def test_create_author_ok(client):
 def test_put_author_ok(client):
     r = client.post("api/authros", json=author_payload())
     r = client.put("api/authors/{1}", json=author_payload())
+    assert r.status_code = 200
+
+def test_patch_author_ok(client):
+    r = client.post("api/authors")
 
